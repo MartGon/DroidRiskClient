@@ -1,42 +1,45 @@
 package com.example.myapplication;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.AlertDialog;
-import android.content.ContentResolver;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
 
     final int ACTIVITY_CHOOSE_FILE = 1;
 
+    // GUI
+    TextView risk_score_display;
+    LinearLayout risk_layout;
+    LinearLayout result_layout;
+    Button upload_button;
+    ImageView apk_icon;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        risk_score_display = findViewById(R.id.risk_score);
+        risk_layout = findViewById(R.id.risk_layout);
+        result_layout = findViewById(R.id.result_layout);
+        upload_button = findViewById(R.id.upload_button);
+        apk_icon = findViewById(R.id.apk_icon);
+
+        result_layout.setVisibility(View.INVISIBLE);
+        apk_icon.setVisibility(View.INVISIBLE);
     }
 
     public void sendMessage(View view)
@@ -60,15 +63,16 @@ public class MainActivity extends AppCompatActivity {
 
                 HttpClient client = new HttpClient();
                 Object args[] = {uri, this};
+                client.execute(args);
 
-                String risk_score = null;
-                try {
-                    risk_score = (String)client.execute(args).get();
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
-                }
+                upload_button.setEnabled(false);
 
-                Toast.makeText(getApplicationContext(), risk_score, Toast.LENGTH_SHORT).show();
+                apk_icon.setVisibility(View.VISIBLE);
+                result_layout.setVisibility(View.INVISIBLE);
+
+                apk_icon.setImageDrawable(getResources().getDrawable(R.drawable.loading));
+                AnimationDrawable anim = (AnimationDrawable) apk_icon.getDrawable();
+                anim.start();
             }
         }
     }

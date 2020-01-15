@@ -1,11 +1,17 @@
 package com.example.myapplication;
 
 import android.content.ContentResolver;
+import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -14,8 +20,27 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DecimalFormat;
 
 public class HttpClient extends AsyncTask {
+
+    MainActivity mainActivity;
+
+    @Override
+    protected void onPostExecute(Object o) {
+        String result = (String)o;
+
+        Toast.makeText(mainActivity.getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+
+        mainActivity.risk_score_display.setText(result + '%');
+        mainActivity.result_layout.setVisibility(View.VISIBLE);
+        mainActivity.upload_button.setEnabled(true);
+
+        AnimationDrawable anim = (AnimationDrawable) mainActivity.apk_icon.getDrawable();
+        anim.stop();
+        mainActivity.apk_icon.setVisibility(View.VISIBLE);
+        mainActivity.apk_icon.setImageDrawable(mainActivity.getResources().getDrawable(R.drawable.android));
+    }
 
     @Override
     protected Object doInBackground(Object[] objects)
@@ -24,12 +49,12 @@ public class HttpClient extends AsyncTask {
             return null;
 
         Uri uri = (Uri)objects[0];
-        AppCompatActivity act = (AppCompatActivity) objects[1];
+        mainActivity = (MainActivity) objects[1];
 
-        return UploadAPK(uri, act);
+        return UploadAPK(uri, mainActivity);
     }
 
-    protected String UploadAPK(Uri uri, AppCompatActivity act)
+    protected String UploadAPK(Uri uri, MainActivity act)
     {
         String ret = null;
 
@@ -91,13 +116,19 @@ public class HttpClient extends AsyncTask {
                     total.append(line).append('\n');
                 }
 
-                ret = total.toString();
+                // Get probability of malware
+                JSONObject response = new JSONObject(total.toString());
+                JSONArray prob_array = response.getJSONArray("prob");
+                double malware_prob = prob_array.getDouble(1) * 100;
+                DecimalFormat df2 = new DecimalFormat("##.#");
+                ret = df2.format(malware_prob);
+
                 System.out.println(ret);
             }
 
             conn.disconnect();
             System.out.println("Disconnected");
-        } catch (IOException e) {
+        } catch (IOException | JSONException e) {
             e.printStackTrace();
         }
 

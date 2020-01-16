@@ -21,9 +21,13 @@ public class MainActivity extends AppCompatActivity {
 
     // GUI
     TextView risk_score_display;
+    TextView pkg_name_display;
+
     LinearLayout risk_layout;
     LinearLayout result_layout;
+
     Button upload_button;
+
     ImageView apk_icon;
 
 
@@ -33,9 +37,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         risk_score_display = findViewById(R.id.risk_score);
+        pkg_name_display = findViewById(R.id.pkg_name_display);
+
         risk_layout = findViewById(R.id.risk_layout);
         result_layout = findViewById(R.id.result_layout);
+
         upload_button = findViewById(R.id.upload_button);
+
         apk_icon = findViewById(R.id.apk_icon);
 
         result_layout.setVisibility(View.INVISIBLE);

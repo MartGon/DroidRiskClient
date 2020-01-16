@@ -1,9 +1,12 @@
 package com.example.myapplication;
 
 import android.content.ContentResolver;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Toast;
 
@@ -15,6 +18,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,24 +26,57 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
 
+
 public class HttpClient extends AsyncTask {
 
     MainActivity mainActivity;
 
     @Override
     protected void onPostExecute(Object o) {
-        String result = (String)o;
+        JSONObject result = (JSONObject) o;
 
-        Toast.makeText(mainActivity.getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+        String prob = "";
+        String package_name = "";
+        Bitmap bmp = null;
+        try {
 
-        mainActivity.risk_score_display.setText(result + '%');
+            // Get malware prob
+            JSONArray prob_array = result.getJSONArray("prob");
+            double malware_prob = prob_array.getDouble(1) * 100;
+            DecimalFormat df2 = new DecimalFormat("##.#");
+            prob = df2.format(malware_prob);
+
+            // Get package name
+            package_name = result.getString("package_name");
+
+            // Get icon
+            String icon_str = result.getString("icon");
+            icon_str = icon_str.subSequence(2, icon_str.length() - 1).toString();
+            byte[] decoded = Base64.decode(icon_str, Base64.DEFAULT);
+            bmp = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        Toast.makeText(mainActivity.getApplicationContext(), prob, Toast.LENGTH_SHORT).show();
+
+        mainActivity.risk_score_display.setText(prob + '%');
+        mainActivity.pkg_name_display.setText(package_name);
+
         mainActivity.result_layout.setVisibility(View.VISIBLE);
+
         mainActivity.upload_button.setEnabled(true);
 
         AnimationDrawable anim = (AnimationDrawable) mainActivity.apk_icon.getDrawable();
         anim.stop();
         mainActivity.apk_icon.setVisibility(View.VISIBLE);
-        mainActivity.apk_icon.setImageDrawable(mainActivity.getResources().getDrawable(R.drawable.android));
+
+        if(bmp == null)
+            mainActivity.apk_icon.setImageDrawable(mainActivity.getResources().getDrawable(R.drawable.android));
+        else
+            mainActivity.apk_icon.setImageBitmap(bmp);
+
     }
 
     @Override
@@ -54,9 +91,9 @@ public class HttpClient extends AsyncTask {
         return UploadAPK(uri, mainActivity);
     }
 
-    protected String UploadAPK(Uri uri, MainActivity act)
+    protected JSONObject UploadAPK(Uri uri, MainActivity act)
     {
-        String ret = null;
+        JSONObject ret = null;
 
         final ContentResolver resolver = act.getContentResolver();
         try {
@@ -118,12 +155,9 @@ public class HttpClient extends AsyncTask {
 
                 // Get probability of malware
                 JSONObject response = new JSONObject(total.toString());
-                JSONArray prob_array = response.getJSONArray("prob");
-                double malware_prob = prob_array.getDouble(1) * 100;
-                DecimalFormat df2 = new DecimalFormat("##.#");
-                ret = df2.format(malware_prob);
+                ret = response;
 
-                System.out.println(ret);
+                System.out.println(ret.toString());
             }
 
             conn.disconnect();

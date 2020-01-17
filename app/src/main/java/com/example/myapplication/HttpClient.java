@@ -3,6 +3,7 @@ package com.example.myapplication;
 import android.content.ContentResolver;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -35,48 +36,62 @@ public class HttpClient extends AsyncTask {
     protected void onPostExecute(Object o) {
         JSONObject result = (JSONObject) o;
 
-        String prob = "";
-        String package_name = "";
-        Bitmap bmp = null;
-        try {
+        if(result != null)
+        {
 
-            // Get malware prob
-            JSONArray prob_array = result.getJSONArray("prob");
-            double malware_prob = prob_array.getDouble(1) * 100;
-            DecimalFormat df2 = new DecimalFormat("##.#");
-            prob = df2.format(malware_prob);
+            mainActivity.apk_reponse_msg = result;
 
-            // Get package name
-            package_name = result.getString("package_name");
+            // Get prob, package name and icon
+            String prob = "";
+            String package_name = "";
+            Bitmap bmp = null;
+            try {
 
-            // Get icon
-            String icon_str = result.getString("icon");
-            icon_str = icon_str.subSequence(2, icon_str.length() - 1).toString();
-            byte[] decoded = Base64.decode(icon_str, Base64.DEFAULT);
-            bmp = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
+                // Get malware prob
+                JSONArray prob_array = result.getJSONArray("prob");
+                double malware_prob = prob_array.getDouble(1) * 100;
+                DecimalFormat df2 = new DecimalFormat("##.#");
+                prob = df2.format(malware_prob);
 
-        } catch (JSONException e) {
-            e.printStackTrace();
+                // Get package name
+                package_name = result.getString("package_name");
+
+                // Get icon
+                String icon_str = result.getString("icon");
+                icon_str = icon_str.subSequence(2, icon_str.length() - 1).toString();
+                byte[] decoded = Base64.decode(icon_str, Base64.DEFAULT);
+                bmp = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            int red_percent = (int)Double.parseDouble(prob)/100 * 255;
+            int  green_percent = 255 - red_percent;
+
+            mainActivity.risk_score_display.setText(prob + '%');
+            mainActivity.risk_score_display.setTextColor(Color.rgb((red_percent, green_percent, 0));
+            mainActivity.pkg_name_display.setText(package_name);
+
+            mainActivity.result_layout.setVisibility(View.VISIBLE);
+
+            AnimationDrawable anim = (AnimationDrawable) mainActivity.apk_icon.getDrawable();
+            anim.stop();
+            mainActivity.apk_icon.setVisibility(View.VISIBLE);
+
+            if(bmp == null)
+                mainActivity.apk_icon.setImageDrawable(mainActivity.getResources().getDrawable(R.drawable.android));
+            else
+                mainActivity.apk_icon.setImageBitmap(bmp);
+        }
+        else
+        {
+            mainActivity.apk_icon.setVisibility(View.INVISIBLE);
+
+            Toast.makeText(mainActivity.getApplicationContext(), "Connection error", Toast.LENGTH_SHORT).show();
         }
 
-        Toast.makeText(mainActivity.getApplicationContext(), prob, Toast.LENGTH_SHORT).show();
-
-        mainActivity.risk_score_display.setText(prob + '%');
-        mainActivity.pkg_name_display.setText(package_name);
-
-        mainActivity.result_layout.setVisibility(View.VISIBLE);
-
         mainActivity.upload_button.setEnabled(true);
-
-        AnimationDrawable anim = (AnimationDrawable) mainActivity.apk_icon.getDrawable();
-        anim.stop();
-        mainActivity.apk_icon.setVisibility(View.VISIBLE);
-
-        if(bmp == null)
-            mainActivity.apk_icon.setImageDrawable(mainActivity.getResources().getDrawable(R.drawable.android));
-        else
-            mainActivity.apk_icon.setImageBitmap(bmp);
-
     }
 
     @Override

@@ -13,6 +13,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
@@ -29,6 +32,9 @@ public class MainActivity extends AppCompatActivity {
     Button upload_button;
 
     ImageView apk_icon;
+
+    // Logic
+    JSONObject apk_reponse_msg = null;
 
 
     @Override
@@ -52,12 +58,29 @@ public class MainActivity extends AppCompatActivity {
 
     public void sendMessage(View view)
     {
-        System.out.println("Hey");
         Intent chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
         chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
         chooseFile.setType(("application/vnd.android.package-archive"));
         Intent intent = Intent.createChooser(chooseFile, "Choose an APK");
         startActivityForResult(intent, ACTIVITY_CHOOSE_FILE);
+    }
+
+    public void moreInfo(View view)
+    {
+        if(apk_reponse_msg != null)
+        {
+            Intent feature_list_intent = new Intent(getApplicationContext(), ListActivity.class);
+            JSONObject apk_info = null;
+            try {
+                apk_info = apk_reponse_msg.getJSONObject("info");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            feature_list_intent.putExtra("apk_info", apk_info.toString());
+            feature_list_intent.putExtra("from_menu", true);
+            startActivity(feature_list_intent);
+        }
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

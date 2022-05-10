@@ -6,7 +6,9 @@
 
 This is the Android client for my [Android Malware Classifier](https://github.com/MartGon/MalwareClassifier).
 
-After launching the app, you can select the APK from your system which you would like to analyze. Once the analysis is over, a number will displayed. This number is a percent of how likely this application is to be a malware sample. The lower this value is, the better.
+After launching the app, you can select the APK from your system which you would like to analyze. Once the analysis is over, a number will displayed. This number is a percent of how likely the selected application is to be a malware sample. The lower this value is, the better.
+
+By pressing the "More information" button, you can examine some of the static features found on this application, such as its requested permissions or functionalities employed.
 
 # About
 
